@@ -182,7 +182,7 @@ class Pyctuator:
         """
         from flask import Flask
         if isinstance(app, Flask):
-            if self.use_flask_blueprint:
+            if not self.use_flask_blueprint:
                 from pyctuator.impl.flask_pyctuator_no_blueprint import FlaskPyctuator
             FlaskPyctuator(app, pyctuator_impl)
             return True
