@@ -71,7 +71,7 @@ class Pyctuator:
         :param free_disk_space_down_threshold_bytes: amount of free space in bytes in "./" (the application's current
          working directory) below which the built-in disk-space health-indicator will fail
         """
-
+        self.use_flask_blueprint = use_flask_blueprint
         self.auto_deregister = auto_deregister
         start_time = datetime.now(timezone.utc)
 
