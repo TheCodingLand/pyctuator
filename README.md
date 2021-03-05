@@ -2,6 +2,16 @@
 [![build](https://github.com/SolarEdgeTech/pyctuator/workflows/build/badge.svg)](https://github.com/SolarEdgeTech/pyctuator/)
 [![Codecov](https://img.shields.io/codecov/c/github/SolarEdgeTech/pyctuator?style=plastic)](https://codecov.io/gh/SolarEdgeTech/pyctuator)
 
+# Fork : 
+
+This fork just adds the /mappings endpoint to the flask integration. (for our own purposes)
+
+I also added a way to expose all the endpoints on "/" route without impacting other configured routes under "/".
+(as a result default pyctuator "/" endpoint is disabled)
+
+
+
+
 # Pyctuator
 
 Monitor Python web apps using 

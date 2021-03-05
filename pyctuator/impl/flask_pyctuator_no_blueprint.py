@@ -39,7 +39,6 @@ class CustomJSONEncoder(JSONEncoder):
             return list(iterable)
         return JSONEncoder.default(self, o)
 
-PYCTUATOR_ENDPOINTS = [ "/env", "/info", "/health", "/metrics", "/loggers", "/threaddump", "/dump", "/logfile", "/mappings" ]
 
 class FlaskPyctuator(PyctuatorRouter):
 
@@ -52,7 +51,9 @@ class FlaskPyctuator(PyctuatorRouter):
     ) -> None:
         super().__init__(app, pyctuator_impl)
 
-        #path_prefix: str = pyctuator_impl.pyctuator_endpoint_path_prefix
+        path_prefix: str = pyctuator_impl.pyctuator_endpoint_path_prefix
+        pyctuator_endpoints = [ "/env", "/info", "/health", "/metrics", "/loggers", "/threaddump", "/dump", "/logfile", "/mappings" ]
+        pyctuator_routes = [ pyctuator_impl.pyctuator_endpoint_path_prefix  +  endpoint for endpoint in pyctuator_endpoints ]
         #flask_blueprint: Blueprint = Blueprint("flask_blueprint", "pyctuator", )
         #flask_blueprint.json_encoder = CustomJSONEncoder
 
@@ -67,7 +68,7 @@ class FlaskPyctuator(PyctuatorRouter):
                 # Set the SBA-V2 content type for responses from Pyctuator
                 path_root = "/" + request.path.split("/")[1]
                 print(path_root)
-                if path_root in PYCTUATOR_ENDPOINTS:
+                if path_root in pyctuator_routes:
                     response_time = datetime.now()
                 
                     response.headers["Content-Type"] = SBA_V2_CONTENT_TYPE
@@ -80,47 +81,47 @@ class FlaskPyctuator(PyctuatorRouter):
         #def get_endpoints() -> Any:
         #    return jsonify(self.get_endpoints_data())
 
-        @app.route("/env")
+        @app.route(f"{path_prefix}/env")
         def get_environment() -> Any:
             return jsonify(pyctuator_impl.get_environment())
 
-        @app.route("/info")
+        @app.route(f"{path_prefix}/info")
         def get_info() -> Any:
             return jsonify(pyctuator_impl.app_info)
 
-        @app.route("/health")
+        @app.route(f"{path_prefix}/health")
         def get_health() -> Any:
             return jsonify(pyctuator_impl.get_health())
 
-        @app.route("/metrics")
+        @app.route(f"{path_prefix}/metrics")
         def get_metric_names() -> Any:
             return jsonify(pyctuator_impl.get_metric_names())
 
-        @app.route("/metrics/<metric_name>")
+        @app.route(f"{path_prefix}/metrics/<metric_name>")
         def get_metric_measurement(metric_name: str) -> Any:
             return jsonify(pyctuator_impl.get_metric_measurement(metric_name))
 
         # Retrieving All Loggers
-        @app.route("/loggers")
+        @app.route(f"{path_prefix}/loggers")
         def get_loggers() -> Any:
             return jsonify(pyctuator_impl.logging.get_loggers())
 
-        @app.route("/loggers/<logger_name>", methods=['POST'])
+        @app.route(f"{path_prefix}/loggers/<logger_name>", methods=['POST'])
         def set_logger_level(logger_name: str) -> Dict:
             request_dict = json.loads(request.data)
             pyctuator_impl.logging.set_logger_level(logger_name, request_dict.get("configuredLevel", None))
             return {}
 
-        @app.route("/loggers/<logger_name>")
+        @app.route(f"{path_prefix}/loggers/<logger_name>")
         def get_logger(logger_name: str) -> Any:
             return jsonify(pyctuator_impl.logging.get_logger(logger_name))
 
-        @app.route("/threaddump")
-        @app.route("/dump")
+        @app.route(f"{path_prefix}/threaddump")
+        @app.route(f"{path_prefix}/dump")
         def get_thread_dump() -> Any:
             return jsonify(pyctuator_impl.get_thread_dump())
 
-        @app.route("/logfile")
+        @app.route(f"{path_prefix}/logfile")
         def get_logfile() -> Tuple[Response, int]:
             range_header: str = request.headers.environ.get('HTTP_RANGE')
             if not range_header:
@@ -136,12 +137,12 @@ class FlaskPyctuator(PyctuatorRouter):
 
             return resp, HTTPStatus.PARTIAL_CONTENT
 
-        @app.route("/trace")
-        @app.route("/httptrace")
+        @app.route(f"{path_prefix}/trace")
+        @app.route(f"{path_prefix}/httptrace")
         def get_httptrace() -> Any:
             return jsonify(pyctuator_impl.http_tracer.get_httptrace())
 
-        @app.route("/mappings")
+        @app.route(f"{path_prefix}/mappings")
         def get_mappings() -> Any:
             return jsonify(pyctuator_impl.get_mappings())
         #app.register_blueprint(flask_blueprint, url_prefix=path_prefix)
