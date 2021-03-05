@@ -79,7 +79,6 @@ def get_servlets() -> List[Servlet]:
     for rule in rules:
         for method in rule.methods:
             if method in documented_methods:
-
                 products = []
                 produced = Products(mediaType = "application/json",negated = False)
                 products.append(produced)
@@ -96,6 +95,7 @@ def get_servlets() -> List[Servlet]:
                     patterns = [predicate_path],
                     produces = products
                 )
+                
                 sd= ServletDetails(handlerMethod=HandlerMethod(className="test", name = "name", descriptor = "descriptor"),           
                                     requestMappingConditions = rc)
                 
@@ -109,8 +109,6 @@ def get_servlets() -> List[Servlet]:
 
 
 class MappingsProvider():
-
-
     def get_mappings(self) -> AllMappings:
         return AllMappings(
             all_mappings=MappingProvider(
