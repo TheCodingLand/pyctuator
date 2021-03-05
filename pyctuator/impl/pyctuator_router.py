@@ -15,7 +15,7 @@ class LinkHref:
 # pylint: disable=too-many-instance-attributes
 @dataclass
 class EndpointsLinks:
-    self: LinkHref
+    #self: LinkHref
     env: LinkHref
     info: LinkHref
     health: LinkHref
@@ -44,7 +44,7 @@ class PyctuatorRouter(ABC):
 
     def get_endpoints_data(self) -> EndpointsData:
         return EndpointsData(EndpointsLinks(
-            LinkHref(self.pyctuator_impl.pyctuator_endpoint_url, False),
+            #LinkHref(self.pyctuator_impl.pyctuator_endpoint_url, False),
             LinkHref(self.pyctuator_impl.pyctuator_endpoint_url + "/env", False),
             LinkHref(self.pyctuator_impl.pyctuator_endpoint_url + "/info", False),
             LinkHref(self.pyctuator_impl.pyctuator_endpoint_url + "/health", False),

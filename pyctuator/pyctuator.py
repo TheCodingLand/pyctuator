@@ -38,6 +38,7 @@ class Pyctuator:
             logfile_max_size: int = 10000,
             logfile_formatter: str = default_logfile_format,
             auto_deregister: bool = True,
+            use_flask_blueprint: bool = False
     ) -> None:
         """The entry point for integrating pyctuator with a web-frameworks such as FastAPI and Flask.
 
@@ -181,7 +182,8 @@ class Pyctuator:
         """
         from flask import Flask
         if isinstance(app, Flask):
-            from pyctuator.impl.flask_pyctuator import FlaskPyctuator
+            if self.use_flask_blueprint:
+                from pyctuator.impl.flask_pyctuator_no_blueprint import FlaskPyctuator
             FlaskPyctuator(app, pyctuator_impl)
             return True
         return False

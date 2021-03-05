@@ -12,7 +12,7 @@ from pyctuator.logfile.logfile import PyctuatorLogfile  # type: ignore
 from pyctuator.logging.pyctuator_logging import PyctuatorLogging
 from pyctuator.metrics.metrics_provider import Metric, MetricNames, MetricsProvider
 from pyctuator.threads.thread_dump_provider import ThreadDump, ThreadDumpProvider
-
+from pyctuator.mappings.mapping_provider import MappingsProvider, MappingProvider
 
 @dataclass
 class GitCommitInfo:
@@ -67,6 +67,7 @@ class PyctuatorImpl:
         self.thread_dump_provider = ThreadDumpProvider()
         self.logfile = PyctuatorLogfile(max_size=logfile_max_size, formatter=logfile_formatter)
         self.http_tracer = HttpTracer()
+        self.mappings_provider = MappingsProvider()
 
         # Determine the endpoint's URL path prefix and make sure it doesn't end with a "/"
         self.pyctuator_endpoint_path_prefix = urlparse(pyctuator_endpoint_url).path
@@ -135,3 +136,7 @@ class PyctuatorImpl:
 
     def get_thread_dump(self) -> ThreadDump:
         return self.thread_dump_provider.get_thread_dump()
+
+    def get_mappings(self) -> MappingProvider:
+        return self.mappings_provider.get_mappings()
+
