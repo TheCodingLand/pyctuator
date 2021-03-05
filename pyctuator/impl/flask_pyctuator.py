@@ -14,7 +14,7 @@ from pyctuator.impl import SBA_V2_CONTENT_TYPE
 from pyctuator.impl.pyctuator_impl import PyctuatorImpl
 from pyctuator.impl.pyctuator_router import PyctuatorRouter
 
-PYCTUATOR_ENDPOINTS = [ "/env", "/info", "/health", "/metrics", "/loggers", "/threaddump", "/dump", "/logfile", "/mappings" ]
+
 
 class CustomJSONEncoder(JSONEncoder):
     """ Override Flask's JSON encoding of datetime to assure ISO format is used.
@@ -55,6 +55,8 @@ class FlaskPyctuator(PyctuatorRouter):
         path_prefix: str = pyctuator_impl.pyctuator_endpoint_path_prefix
         flask_blueprint: Blueprint = Blueprint("flask_blueprint", "pyctuator", )
         flask_blueprint.json_encoder = CustomJSONEncoder
+        pyctuator_endpoints = [ "/env", "/info", "/health", "/metrics", "/loggers", "/threaddump", "/dump", "/logfile", "/mappings" ]
+        pyctuator_routes = [ path_prefix  +  endpoint for endpoint in pyctuator_endpoints ]
 
         @app.before_request
         def intercept_requests_and_responses() -> None:
@@ -65,9 +67,8 @@ class FlaskPyctuator(PyctuatorRouter):
                 
 
                 # Set the SBA-V2 content type for responses from Pyctuator
-                path_root = "/" + request.path.split("/")[1]
-                print(path_root)
-                if path_root in PYCTUATOR_ENDPOINTS:
+                
+                if request.path in pyctuator_routes:
                     response_time = datetime.now()
                 
                     response.headers["Content-Type"] = SBA_V2_CONTENT_TYPE

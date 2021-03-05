@@ -53,7 +53,7 @@ class FlaskPyctuator(PyctuatorRouter):
 
         path_prefix: str = pyctuator_impl.pyctuator_endpoint_path_prefix
         pyctuator_endpoints = [ "/env", "/info", "/health", "/metrics", "/loggers", "/threaddump", "/dump", "/logfile", "/mappings" ]
-        pyctuator_routes = [ pyctuator_impl.pyctuator_endpoint_path_prefix  +  endpoint for endpoint in pyctuator_endpoints ]
+        pyctuator_routes = [ path_prefix  +  endpoint for endpoint in pyctuator_endpoints ]
         #flask_blueprint: Blueprint = Blueprint("flask_blueprint", "pyctuator", )
         #flask_blueprint.json_encoder = CustomJSONEncoder
 
@@ -66,9 +66,7 @@ class FlaskPyctuator(PyctuatorRouter):
                 
 
                 # Set the SBA-V2 content type for responses from Pyctuator
-                path_root = "/" + request.path.split("/")[1]
-                print(path_root)
-                if path_root in pyctuator_routes:
+                if request.path in pyctuator_routes:
                     response_time = datetime.now()
                 
                     response.headers["Content-Type"] = SBA_V2_CONTENT_TYPE

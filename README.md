@@ -10,8 +10,6 @@ I also added a way to expose all the endpoints on "/" route without impacting ot
 (as a result default pyctuator "/" endpoint is disabled)
 
 
-
-
 # Pyctuator
 
 Monitor Python web apps using 
