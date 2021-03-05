@@ -47,81 +47,100 @@ class FlaskPyctuator(PyctuatorRouter):
     def __init__(
             self,
             app: Flask,
-            pyctuator_impl: PyctuatorImpl
-
+            pyctuator_impl: PyctuatorImpl,
+            flask_auth_decorator,
     ) -> None:
-        super().__init__(app, pyctuator_impl)
-
+        super().__init__(app, pyctuator_impl )
+        
         path_prefix: str = pyctuator_impl.pyctuator_endpoint_path_prefix
         flask_blueprint: Blueprint = Blueprint("flask_blueprint", "pyctuator", )
         flask_blueprint.json_encoder = CustomJSONEncoder
-        pyctuator_endpoints = [ "/env", "/info", "/health", "/metrics", "/loggers", "/threaddump", "/dump", "/logfile", "/mappings" ]
+        pyctuator_endpoints = ["/", "/env", "/info", "/health", "/metrics", "/loggers", "/threaddump", "/dump", "/logfile", "/mappings" ]
         pyctuator_routes = [ path_prefix  +  endpoint for endpoint in pyctuator_endpoints ]
+
+        def conditionally(dec):
+            def resdec(f):
+                if not dec:
+                    return f
+                return dec(f)
+            return resdec
 
         @app.before_request
         def intercept_requests_and_responses() -> None:
             request_time = datetime.now()
-
             @after_this_request
             def after_response(response: Response) -> Response:
-                
-
-                # Set the SBA-V2 content type for responses from Pyctuator
-                
                 if request.path in pyctuator_routes:
                     response_time = datetime.now()
-                
-                    response.headers["Content-Type"] = SBA_V2_CONTENT_TYPE
+                    response.headers["Content-Type"] = SBA_V2_CONTENT_TYPE # Set the SBA-V2 content type for responses from Pyctuator
 
                 # Record the request and response
                     self.record_request_and_response(response, request_time, response_time)
                 return response
 
-        #@flask_blueprint.route("/")
-        #def get_endpoints() -> Any:
-        #    return jsonify(self.get_endpoints_data())
-
+        
+        @flask_blueprint.route("/")
+        @conditionally(flask_auth_decorator)
+        def get_endpoints() -> Any:
+            return jsonify(self.get_endpoints_data())
+        
         @flask_blueprint.route("/env")
+        @conditionally(flask_auth_decorator)
         def get_environment() -> Any:
             return jsonify(pyctuator_impl.get_environment())
 
+      
         @flask_blueprint.route("/info")
+        @conditionally(flask_auth_decorator)
         def get_info() -> Any:
             return jsonify(pyctuator_impl.app_info)
 
+        
         @flask_blueprint.route("/health")
+        @conditionally(flask_auth_decorator)
         def get_health() -> Any:
             return jsonify(pyctuator_impl.get_health())
-
+        
         @flask_blueprint.route("/metrics")
+        @conditionally(flask_auth_decorator)
         def get_metric_names() -> Any:
             return jsonify(pyctuator_impl.get_metric_names())
 
+        
         @flask_blueprint.route("/metrics/<metric_name>")
+        @conditionally(flask_auth_decorator)
         def get_metric_measurement(metric_name: str) -> Any:
             return jsonify(pyctuator_impl.get_metric_measurement(metric_name))
 
         # Retrieving All Loggers
+        
         @flask_blueprint.route("/loggers")
+        @conditionally(flask_auth_decorator)
         def get_loggers() -> Any:
             return jsonify(pyctuator_impl.logging.get_loggers())
 
         @flask_blueprint.route("/loggers/<logger_name>", methods=['POST'])
+        @conditionally(flask_auth_decorator)
         def set_logger_level(logger_name: str) -> Dict:
             request_dict = json.loads(request.data)
             pyctuator_impl.logging.set_logger_level(logger_name, request_dict.get("configuredLevel", None))
             return {}
 
+        
         @flask_blueprint.route("/loggers/<logger_name>")
+        @conditionally(flask_auth_decorator)
         def get_logger(logger_name: str) -> Any:
             return jsonify(pyctuator_impl.logging.get_logger(logger_name))
 
+       
         @flask_blueprint.route("/threaddump")
         @flask_blueprint.route("/dump")
+        @conditionally(flask_auth_decorator)
         def get_thread_dump() -> Any:
             return jsonify(pyctuator_impl.get_thread_dump())
-
+        
         @flask_blueprint.route("/logfile")
+        @conditionally(flask_auth_decorator)
         def get_logfile() -> Tuple[Response, int]:
             range_header: str = request.headers.environ.get('HTTP_RANGE')
             if not range_header:
@@ -137,12 +156,16 @@ class FlaskPyctuator(PyctuatorRouter):
 
             return resp, HTTPStatus.PARTIAL_CONTENT
 
+        
         @flask_blueprint.route("/trace")
         @flask_blueprint.route("/httptrace")
+        @conditionally(flask_auth_decorator)
         def get_httptrace() -> Any:
             return jsonify(pyctuator_impl.http_tracer.get_httptrace())
 
+        
         @flask_blueprint.route("/mappings")
+        @conditionally(flask_auth_decorator)
         def get_mappings() -> Any:
             return jsonify(pyctuator_impl.get_mappings())
 

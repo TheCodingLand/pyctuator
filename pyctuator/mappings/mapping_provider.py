@@ -3,21 +3,19 @@ from dataclasses import dataclass
 
 from typing import List, Optional
 
-
 @dataclass
-class RequestHandlerConditionsProduces:
+class Products:
     mediaType: str
     negated: bool
 
 @dataclass
-class RequestHandlerConditions:
-    consumes: List[str]
+class RequestMappingConditions:
+    consumes: Optional[List[str]]
     headers: List[str]
     methods: List[str]
     params: List[str]
     patterns: List[str]
-    produces: List[RequestHandlerConditionsProduces]
-
+    produces: List[Products]
 
 @dataclass
 class HandlerMethod:
@@ -26,34 +24,25 @@ class HandlerMethod:
     descriptor: str
 
 @dataclass
-class HandlerDetails:
+class ServletDetails:
     handlerMethod: HandlerMethod
-    handlerFunction: str
-    requestHandlerConditions: RequestHandlerConditions
-
-
+    requestMappingConditions: RequestMappingConditions
 
 @dataclass
-class Endpoints:
-    predictate: str
+class Servlet:
+    predicate: str
     handler: str
-    details: HandlerDetails
-
-
+    details: Optional[ServletDetails]
 
 @dataclass
-class DispatcherHandler:
-    webHandler: List[Endpoints]
-
-
+class DispatcherServlet:
+    dispatcherServlet: List[Servlet]
 
 @dataclass
 class Mappings:
-    dispatcherHandlers: [DispatcherHandler, ]
+    dispatcherServlets: DispatcherServlet
     parentid : Optional[int]
     
-
-
 @dataclass 
 class Application:
     mappings: Mappings
@@ -67,75 +56,75 @@ class MappingProvider:
     contexts: Contexts
 
 @dataclass
+class AllMappings:
+    all_mappings: MappingProvider
+
+@dataclass
 class Route():
     endpoint: str
     methods: List[str]
     rule: str
-
-    
-
-def get_request_handlers() -> List[RequestHandlerConditionsProduces]:
+   
+def get_servlets() -> List[Servlet]:
     from operator import attrgetter
     from flask import current_app as app
     
-    
-    
     rules = list(app.url_map.iter_rules())
     if not rules:
-        
         return
     print (rules[0].endpoint)
-    requestHandlers = []
+    servlets = []
+    documented_methods = ["GET", "POST", "PATCH", "PUT", "DELETE"]
+
     for rule in rules:
-        artefacts = []
-        produced = RequestHandlerConditionsProduces(mediaType= "application/json",negated = False)
-        artefacts.append(produced)
-        rc = RequestHandlerConditions(
-            consumes = [], 
-            headers = [],
-            methods =  [method for method in rule.methods],
-            params = [],
-            patterns = [],
-            produces = artefacts
-        )
-        requestHandlers.append(rc)
-    return requestHandlers
-    #print(requestHandlers)
-        
+        for method in rule.methods:
+            if method in documented_methods:
+
+                products = []
+                produced = Products(mediaType = "application/json",negated = False)
+                products.append(produced)
+                predicate_path = rule.rule.replace("<","{").replace(">","}")
+                consumes = ["application/json"]
+                if method == "GET":
+                    consumes = []
+                
+                rc = RequestMappingConditions(
+                    consumes = consumes, # we cannot know because 
+                    headers = [],
+                    methods = [method],
+                    params = [],
+                    patterns = [predicate_path],
+                    produces = products
+                )
+                sd= ServletDetails(handlerMethod=HandlerMethod(className="test", name = "name", descriptor = "descriptor"),           
+                                    requestMappingConditions = rc)
+                
+                
+                servlet = Servlet(predicate=f"{{{method} {predicate_path}, produces [application/json]}}",
+                                    handler = rule.endpoint, #name of the endpoint in flask
+                                    details = sd)
+
+                servlets.append(servlet)
+    return servlets
+
 
 class MappingsProvider():
 
-    #def _get_request_mapping_conditions(self, route: Route) -> RequestHandlerConditions:
-    #    artefacts = []
-    #    produced = RequestHandlerConditionsProduces(mediaType= "application/json",negated = False)
-    #    artefacts.append(produced)
-    #    return RequestHandlerConditions(
-    #        consumes = [], 
-    #        headers = [],
-    #        methods =  [],
-    #        params = [],
-    #        patterns = [],
-    #        produces = [artefacts],
-            
-    #    )
-    def _get_dispatch_handlers(self, app):
-        pass
-        
 
-
-    def get_mappings(self) -> Contexts:
-        return MappingProvider(
-            contexts=Contexts(
-                application=Application(
-                    mappings=Mappings(
-                        dispatcherHandlers=[DispatcherHandler(webHandler=get_request_handlers())],
-                        parentid = None
-                            #webHandler() #will do for now as we only have web handlers
-                        
+    def get_mappings(self) -> AllMappings:
+        return AllMappings(
+            all_mappings=MappingProvider(
+                contexts=Contexts(
+                    application=Application(
+                        mappings=Mappings(
+                            dispatcherServlets=DispatcherServlet(dispatcherServlet=get_servlets()),
+                                parentid = None
+                        )
                     )
                 )
             )
         )
+
     
     
     

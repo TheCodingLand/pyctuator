@@ -31,14 +31,16 @@ class Pyctuator:
             app_url: str,
             pyctuator_endpoint_url: str,
             registration_url: Optional[str],
+            flask_auth_decorator: Optional[callable] = None,
+            
             registration_auth: Optional[Auth] = None,
             app_description: Optional[str] = None,
             registration_interval_sec: int = 10,
             free_disk_space_down_threshold_bytes: int = 1024 * 1024 * 100,
             logfile_max_size: int = 10000,
             logfile_formatter: str = default_logfile_format,
-            auto_deregister: bool = True,
-            use_flask_blueprint: bool = False
+            auto_deregister: bool = True
+            
     ) -> None:
         """The entry point for integrating pyctuator with a web-frameworks such as FastAPI and Flask.
 
@@ -71,7 +73,9 @@ class Pyctuator:
         :param free_disk_space_down_threshold_bytes: amount of free space in bytes in "./" (the application's current
          working directory) below which the built-in disk-space health-indicator will fail
         """
-        self.use_flask_blueprint = use_flask_blueprint
+        
+        
+        self.flask_auth_decorator = flask_auth_decorator
         self.auto_deregister = auto_deregister
         start_time = datetime.now(timezone.utc)
 
@@ -182,11 +186,9 @@ class Pyctuator:
         """
         from flask import Flask
         if isinstance(app, Flask):
-            if not self.use_flask_blueprint:
-                from pyctuator.impl.flask_pyctuator_no_blueprint import FlaskPyctuator
-            else:
-                from pyctuator.impl.flask_pyctuator import FlaskPyctuator
-            FlaskPyctuator(app, pyctuator_impl)
+          
+            from pyctuator.impl.flask_pyctuator import FlaskPyctuator
+            FlaskPyctuator(app, pyctuator_impl, self.flask_auth_decorator)
             return True
         return False
 
